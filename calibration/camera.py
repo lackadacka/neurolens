@@ -97,7 +97,7 @@ class Camera:
         assert K[2, 2] == 1.0
         self.K = K
         self.K.register_hook(zero_K_gradient)
-        assert lensnet is None or isinstance(lensnet, LensNet)
+        # assert lensnet is None or isinstance(lensnet, LensNet)
         self.lensnet = lensnet
         assert RT is None or isinstance(RT, torch.Tensor)
         if RT is None:

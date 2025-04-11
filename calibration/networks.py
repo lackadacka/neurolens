@@ -50,7 +50,7 @@ class iResNet(pl.LightningModule):
 
         torch.manual_seed(0)
         nodes = [Ff.graph_inn.InputNode(*self.inp_size_linear, name="input")]
-        for i in range(5):
+        for i in range(1): # 5 seems very unnecessary and breaks calibration
         
             nodes.append(
                 Ff.graph_inn.Node(

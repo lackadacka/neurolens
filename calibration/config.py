@@ -84,7 +84,7 @@ class ConfigRandomGaussianBlur:
     # around 3σ, so we need a full filter size of 2*3*3.3, so around
     # 19.
     # Must be an odd, positive integer.
-    kernel_size: int = (11, 11)
+    kernel_size: Tuple = (11, 11)
     # sigma: Tuple[float, float] = (3.3, 3.3)
     sigma: Tuple[float, float] = (1.6, 1.6)
     border_type: str = "reflect"

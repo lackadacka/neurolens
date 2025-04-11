@@ -12,14 +12,16 @@ from matplotlib import pyplot as plt
 from torch.nn import functional as F
 from torch.utils.tensorboard import SummaryWriter
 
-from ..camera import Camera
-from ..config import Config
-from ..networks import iResNet, LensNet 
-from ..util import batched_func
+from calibration.camera import Camera
+from calibration.config import Config
+from calibration.networks import iResNet, LensNet 
+from calibration.util import batched_func
 
 
 LOGGER = logging.getLogger(__name__)
 CONF_FP: str = path.join("..", "..", "conf")
+is_eval = False
+log_dir = "../../../data/logs"
 
 
 @hydra.main(config_path=CONF_FP, config_name="calibration_config")
@@ -32,7 +34,8 @@ def cli(cfg: Config):
     OpenCV model.
     """
     LOGGER.info("Loading detection data...")
-    storage_fp = path.join("..", "..", "data/target")
+    # storage_fp = path.join("..", "..", "data/target")
+    storage_fp = "../../../data/target"
 
     with open(path.join(storage_fp, "points.json"), "r") as inf:
         cam_info = json.load(inf)
@@ -303,7 +306,7 @@ def cli(cfg: Config):
     start_epoch = 0
     if is_eval:
         start_epoch = checkpoint["epoch"]
-    rnge = tqdm.trange(start_epoch, 500)
+    rnge = tqdm.trange(start_epoch, 50) # n epochs
 
 
     # load data
@@ -426,51 +429,51 @@ def cli(cfg: Config):
 
                 plt.close(fig)
 
-        if epoch_idx % 10 == 0:
-            # visualize keypoints
+        # if epoch_idx % 10 == 0:
+        #     # visualize keypoints
 
-            rows, cols = 3, 4
-            gridspec_kw = {"wspace": 0.0, "hspace": 0.0}
-            fig, axarr = plt.subplots(
-                rows, cols, gridspec_kw=gridspec_kw, figsize=(12, 9)
-            )
-            bleed = 0
-            fig.subplots_adjust(
-                left=bleed, bottom=bleed, right=(1 - bleed), top=(1 - bleed)
-            )
-            for cam_idx, (cam, board_coord_mat, frame_coord_mat, ax) in enumerate(
-                zip(cams_val, board_coords_val, frame_coords_val, axarr.ravel())
-            ):
-                board_coord_mat = (
-                    torch.from_numpy(board_coord_mat).to(torch.float32).to(dev)
-                )
-                frame_coord_mat = (
-                    torch.from_numpy(frame_coord_mat).to(torch.float32).to(dev)
-                )
-                projected = cam.project_points(board_coord_mat)
-                # vis, _ = vis_lens(cam)
-                # ax.imshow(vis[..., :3])
-                ax.scatter(
-                    frame_coord_mat.detach().cpu().numpy()[:, 0],
-                    frame_coord_mat.detach().cpu().numpy()[:, 1],
-                    marker="o",
-                    s=5,
-                )
-                ax.scatter(
-                    projected.detach().cpu().numpy()[:, 0],
-                    projected.detach().cpu().numpy()[:, 1],
-                    marker="o",
-                    s=5,
-                )
-                ax.set_axis_off()
-                ax.grid(False)
-                plt.tight_layout()
-            fig.savefig(log_dir + f"/vis_{epoch_idx // 10}.png")
-            vis, _ = vis_lens(cam)
-            writer.add_image(
-                "vis/lens", vis, global_step=epoch_idx, walltime=None, dataformats="HWC"
-            )
-            plt.close(fig)
+        #     rows, cols = 3, 4
+        #     gridspec_kw = {"wspace": 0.0, "hspace": 0.0}
+        #     fig, axarr = plt.subplots(
+        #         rows, cols, gridspec_kw=gridspec_kw, figsize=(12, 9)
+        #     )
+        #     bleed = 0
+        #     fig.subplots_adjust(
+        #         left=bleed, bottom=bleed, right=(1 - bleed), top=(1 - bleed)
+        #     )
+        #     for cam_idx, (cam, board_coord_mat, frame_coord_mat, ax) in enumerate(
+        #         zip(cams_val, board_coords_val, frame_coords_val, axarr.ravel())
+        #     ):
+        #         board_coord_mat = (
+        #             torch.from_numpy(board_coord_mat).to(torch.float32).to(dev)
+        #         )
+        #         frame_coord_mat = (
+        #             torch.from_numpy(frame_coord_mat).to(torch.float32).to(dev)
+        #         )
+        #         projected = cam.project_points(board_coord_mat)
+        #         # vis, _ = vis_lens(cam)
+        #         # ax.imshow(vis[..., :3])
+        #         ax.scatter(
+        #             frame_coord_mat.detach().cpu().numpy()[:, 0],
+        #             frame_coord_mat.detach().cpu().numpy()[:, 1],
+        #             marker="o",
+        #             s=5,
+        #         )
+        #         ax.scatter(
+        #             projected.detach().cpu().numpy()[:, 0],
+        #             projected.detach().cpu().numpy()[:, 1],
+        #             marker="o",
+        #             s=5,
+        #         )
+        #         ax.set_axis_off()
+        #         ax.grid(False)
+        #         plt.tight_layout()
+        #     fig.savefig(log_dir + f"/vis_{epoch_idx // 10}.png")
+        #     vis, _ = vis_lens(cam)
+        #     writer.add_image(
+        #         "vis/lens", vis, global_step=epoch_idx, walltime=None, dataformats="HWC"
+        #     )
+        #     plt.close(fig)
 
         train_rmse = torch.sqrt(torch.cat(loss_train, dim=0).mean())
         writer.add_scalar("train_rmse", train_rmse.detach(), epoch_idx)

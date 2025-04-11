@@ -1,5 +1,5 @@
 pytorch-lightning>=1.5.7
-pytorch3d==0.5.0
+# pytorch3d==0.5.0
 hydra-colorlog>=1.1.0
 kornia>=0.6.2
 pdbpp>=0.10.3
@@ -13,3 +13,6 @@ FrEIA @ git+https://github.com/VLL-HD/FrEIA.git
 panda3d==1.10.10
 toolz>=0.11.2
 flow-vis>=0.1
+numpy==1.23.5
+torchvision==0.21.0
+tensorboard==2.19.0
